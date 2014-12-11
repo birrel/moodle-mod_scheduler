@@ -152,6 +152,20 @@ function xmldb_scheduler_upgrade($oldversion=0) {
         // Savepoint reached.
         upgrade_mod_savepoint(true, 2014071300, 'scheduler');
     }
+    
+    /* ******************* group upgrade ********************** */
 
+    if ($oldversion < 2014121100) {
+       
+       // Define and add group slot field
+       $table = new xmldb_table('scheduler_slots');
+       $field = new xmldb_field('groupslot', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'hideuntil');
+       
+       if (!$dbman->field_exists($table, $field)) {
+           $dbman->add_field($table, $field);
+       }
+        // Savepoint reached.
+        upgrade_mod_savepoint(true, 2014121100, 'scheduler');
+    }
     return true;
 }
