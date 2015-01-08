@@ -150,7 +150,10 @@ if ($action == 'savechoice') {
 
     foreach ($slotidstoadd as $slotid) {
         $newslot = $scheduler->get_slot($slotid);
-
+        // hmhmh
+        if ($appointgroup) {
+            $newslot->groupslot = 1;
+        }
         // Create new appointment and add it for each member of the group.
         foreach ($oldslotowners as $astudentid) {
             $appointment = $newslot->create_appointment();

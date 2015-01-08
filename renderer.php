@@ -433,7 +433,8 @@ class mod_scheduler_renderer extends plugin_renderer_base {
         if (count($booker->groupchoice) > 0) {
             $controls .= get_string('appointfor', 'scheduler');
             $choices = $booker->groupchoice;
-            $choices[0] = get_string('appointsolo', 'scheduler');
+            // Make this optional
+        //    $choices[0] = get_string('appointsolo', 'scheduler');
             ksort($choices);
             $controls .= html_writer::select($choices, 'appointgroup', '', '');
             $controls .= $this->help_icon('appointagroup', 'scheduler');

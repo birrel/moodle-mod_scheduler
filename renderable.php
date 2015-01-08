@@ -34,6 +34,7 @@ class scheduler_slot_table implements renderable {
         if ($this->showgrades) {
             $slot->grade = $appointmentmodel->grade;
         }
+        $slot->groupslot = $slotmodel->groupslot;
 
         $this->slots[] = $slot;
     }
@@ -116,6 +117,7 @@ class scheduler_slot_booker implements renderable {
         $slot->groupinfo = $groupinfo;
         $slot->teacher = $slotmodel->get_teacher();
         $slot->otherstudents = $otherstudents;
+        $slot->groupslot = $slotmodel->groupslot;
 
         $this->slots[] = $slot;
     }
@@ -210,7 +212,8 @@ class scheduler_slot_manager implements renderable {
         $slot->isattended = $slotmodel->is_attended();
         $slot->isappointed = $slotmodel->get_appointment_count();
         $slot->exclusivity = $slotmodel->exclusivity;
-
+        $slot->groupslot = $slotmodel->groupslot;
+        
         $this->slots[] = $slot;
     }
 

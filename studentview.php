@@ -96,8 +96,13 @@ if ($bookablecnt == 0) {
     $booker = new scheduler_slot_booker($scheduler, $USER->id, $actionurl, $style, $bookablecnt);
     $bookedany = false;
     foreach ($bookableslots as $slot) {
+        
         $booked = !is_null($slot->get_student_appointment($USER->id));
-
+        // ADSDSADFS
+//        if ($slot->groupslot == 1 && !$booked ) {
+//            continue;
+//        }
+        
         if ($slot->is_groupslot() && has_capability('mod/scheduler:seeotherstudentsbooking', $context)) {
             $others = new scheduler_student_list($scheduler, false);
             foreach ($slot->get_appointments() as $otherapp) {
