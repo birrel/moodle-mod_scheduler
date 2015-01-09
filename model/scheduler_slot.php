@@ -187,6 +187,10 @@ class scheduler_slot extends mvc_child_record_model {
         $this->clear_calendar();
         parent::delete();
     }
+    
+    public function set_exclusivity($exclusivity) {
+        $this->data->exclusivity = strval($exclusivity);
+    }
 
 
     /* The event code is SSstu (for a student event) or SSsup (for a teacher event).

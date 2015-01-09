@@ -139,6 +139,8 @@ if ($action == 'savechoice') {
 
                 // Delete the appointment (and possibly the slot).
                 $scheduler->delete_appointment($oldappid);
+                $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
+                $oldslot->save();
 
                 // Notify the teacher.
                 if ($scheduler->allownotifications) {
@@ -170,6 +172,11 @@ if ($action == 'savechoice') {
                 scheduler_send_email_from_template($teacher, $student, $course, 'newappointment', 'applied', $vars, 'scheduler');
             }
         }
+        if ($appointgroup) {
+            $groupmembers = groups_get_members($appointgroup);
+            $newslot->set_exclusivity(count($groupmembers));
+           // echo var_dump($newslot);
+        }
         $newslot->save();
     }
 }
@@ -186,7 +193,8 @@ if ($action == 'disengage') {
         foreach ($appointments as $appointment) {
 
             $oldslot = $scheduler->get_slot($appointment->slotid);
-
+            $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
+            $oldslot->save();
             \mod_scheduler\event\booking_removed::create_from_slot($oldslot)->trigger();
 
             $scheduler->delete_appointment($appointment->id);
