@@ -139,9 +139,10 @@ if ($action == 'savechoice') {
 
                 // Delete the appointment (and possibly the slot).
                 $scheduler->delete_appointment($oldappid);
-                $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
-                $oldslot->save();
-
+                if ($scheduler->is_group_scheduling_enabled()) {
+                    $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
+                    $oldslot->save();
+                }
                 // Notify the teacher.
                 if ($scheduler->allownotifications) {
                     scheduler_send_email_from_template($teacher, $student, $course, 'cancelledbystudent', 'cancelled', $vars, 'scheduler');
@@ -175,7 +176,9 @@ if ($action == 'savechoice') {
         if ($appointgroup) {
             $groupmembers = groups_get_members($appointgroup);
             $newslot->set_exclusivity(count($groupmembers));
-           // echo var_dump($newslot);
+        }
+        else if ($scheduler->is_group_scheduling_enabled()) {
+            $newslot->set_exclusivity(1);
         }
         $newslot->save();
     }
@@ -185,16 +188,44 @@ if ($action == 'savechoice') {
 if ($action == 'disengage') {
     require_sesskey();
     require_capability('mod/scheduler:disengage', $context);
-    $where = 'studentid = :studentid AND attended = 0 AND ' .
+    
+    // If group scheduling, we want to disengage appointments for every group member
+    // First we need to get user's groups in this course
+    // Then we get all members of those groups
+    $mygroups = groups_get_all_groups($scheduler->courseid, $USER->id, $cm->groupingid, 'g.id, g.name');
+    $groupmembers_ids = array();
+    if ($scheduler->is_group_scheduling_enabled() && count($mygroups) > 0) {
+        $mygroups_ids = array();
+        foreach ($mygroups as $mygroup) {
+            $mygroups_ids[] = $mygroup->id;
+        }
+        $mygroups_idlist = implode("','", $mygroups_ids);
+        $sql = 'SELECT * 
+                  FROM {groups_members} g 
+              '."WHERE g.groupid IN ('$mygroups_idlist');";
+        $groupmembers = $DB->get_records_sql ($sql);
+        foreach ($groupmembers as $groupmember) {
+            $groupmembers_ids[] = $groupmember->userid;
+        }            
+    }
+    else {
+        $groupmembers_ids[] = $USER->id;
+    }   
+    $groupmembers_idlist = implode("','", $groupmembers_ids);
+    
+    $where = "studentid IN('$groupmembers_idlist') "
+            . "AND attended = 0 AND " .
         'EXISTS(SELECT 1 FROM {scheduler_slots} sl WHERE sl.id = slotid AND sl.schedulerid = :scheduler AND sl.starttime > :cutoff)';
-    $params = array('scheduler' => $scheduler->id, 'studentid' => $USER->id, 'cutoff' => time() + $scheduler->guardtime);
+    $params = array('scheduler' => $scheduler->id, 'cutoff' => time() + $scheduler->guardtime);
     $appointments = $DB->get_records_select('scheduler_appointment', $where, $params);
     if ($appointments) {
         foreach ($appointments as $appointment) {
 
             $oldslot = $scheduler->get_slot($appointment->slotid);
-            $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
-            $oldslot->save();
+            if ($scheduler->is_group_scheduling_enabled()) {
+                $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
+                $oldslot->save();
+            }
             \mod_scheduler\event\booking_removed::create_from_slot($oldslot)->trigger();
 
             $scheduler->delete_appointment($appointment->id);

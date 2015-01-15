@@ -110,7 +110,7 @@ if ($bookablecnt == 0) {
         }
 
         // Check what to print as group information...
-        if ($slot->exclusivity == 0) {
+        if ($slot->exclusivity == 0 || $scheduler->is_group_scheduling_enabled()) {
             $groupinfo = get_string('yes');
         } else if ($slot->exclusivity == 1) {
             $groupinfo = get_string('no');

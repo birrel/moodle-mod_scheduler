@@ -156,6 +156,10 @@ switch ($action) {
             $oldstudents[] = $app->studentid;
             $slot->remove_appointment($app);
         }
+        if ($scheduler->is_group_scheduling_enabled()) {
+            $oldslot->set_exclusivity($CFG->scheduler_maxstudentsperslot);
+        }
+        
         // notify student
         if ($scheduler->allownotifications) {
             foreach ($oldstudents as $oldstudent) {
